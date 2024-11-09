@@ -8,6 +8,5 @@ edition = "2021"
 [dependencies]
 obj-exporter = "0.2"
 image = "0.25.5"
-imageproc = "0.25.0"
 rgeometry = "0.10.0"
 sdfer = "0.2.1"

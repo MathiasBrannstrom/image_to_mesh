@@ -9,7 +9,7 @@ use rgeometry::{data::Polygon, data::Point};
 fn main() {
     println!("Hello, world!");
 
-    create_mesh_from_image("C:\\tmp\\simple_shape.png").unwrap();
+    create_mesh_from_image("C:\\tmp\\frog_piece.png").unwrap();
 }
 
 fn sub(a: [f32; 2], b: [f32; 2]) -> [f32; 2] {
@@ -31,9 +31,9 @@ fn create_mesh_from_image(image_path: &str) -> Result<(), Box<dyn Error>> {
         *pixel = Luma([img.get_pixel(x, y).channels()[3]]);
     }
 
-    let mut sdf = sdf_image(width, height, &imgbuf);
+    let mut sdf = sdf_image(width, height, 20.0, &imgbuf);
 
-    let biggest_contour = find_contour(&sdf, 40u8);
+    let biggest_contour = find_contour(&sdf, 128u8);
 
     let biggest_contour = smooth_contour(biggest_contour,10);
 
@@ -46,17 +46,19 @@ fn create_mesh_from_image(image_path: &str) -> Result<(), Box<dyn Error>> {
 
     let scaled_points = biggest_contour.iter().map(|p| [p[0] /f_width, p[1] / f_height]).collect::<Vec<[f32; 2]>>();
 
-    // let scaled_points = remove_points_with_angle(scaled_points, n_points, PI/8.0);
+    let n_points = scaled_points.len();
+    let scaled_points = remove_points_with_angle(scaled_points, n_points, PI/30.0);
+
     let n_points = scaled_points.len();
     
     println!("Points after deletion: {}", n_points);
     let polygon = Polygon::new(scaled_points.iter().map(|p| Point::new([p[0], p[1]])).collect()).unwrap();
     
-    let front_vertices = scaled_points.iter().map(|p| Vertex{x: (f_width - p[0] - 1.0) as f64, y: (f_height - p[1]-1.0) as f64, z: 0.0});
-    let back_vertices = scaled_points.iter().map(|p| Vertex{x: (f_width - p[0] - 1.0) as f64, y: (f_height - p[1]-1.0) as f64, z: 0.05});
+    let front_vertices = scaled_points.iter().map(|p| Vertex{x: (0.5 - p[0]) as f64, y: (0.5 - p[1]) as f64, z: 0.0});
+    let back_vertices = scaled_points.iter().map(|p| Vertex{x: (0.5 - p[0]) as f64, y: (0.5 - p[1]) as f64, z: 0.05});
     
-    let front_uv_vertices = scaled_points.iter().map(|p| TVertex{u: p[0] as f64, v: p[1] as f64, w: 0.0});
-    let back_uv_vertices = scaled_points.iter().map(|p| TVertex{u: p[0] as f64, v: p[1] as f64, w: 0.0});
+    let front_uv_vertices = scaled_points.iter().map(|p| TVertex{u: p[0] as f64, v: 1.0- p[1] as f64, w: 0.0});
+    let back_uv_vertices = scaled_points.iter().map(|p| TVertex{u: p[0] as f64, v: 1.0 - p[1] as f64, w: 0.0});
     
     let triangulation: Vec<(usize, usize, usize)> = rgeometry::algorithms::triangulation::earclip::earclip(&polygon).map(|(p0, p1, p2)| (p0.usize(), p1.usize(), p2.usize())).collect();
     let front_triangles = triangulation.iter()
@@ -64,7 +66,6 @@ fn create_mesh_from_image(image_path: &str) -> Result<(), Box<dyn Error>> {
 
     let back_triangles =  triangulation.iter()
     .map(|(v0, v1, v2)| triangle_from_indices(*v0, *v1, *v2, n_points));
-
 
     let mut side_triangles:Vec<Primitive> = vec![];
 
@@ -235,7 +236,8 @@ fn find_contour(image: &GrayImage, threshold: u8) -> Vec<[f32; 2]> {
 #[allow(dead_code)]
 fn sdf_image(
     width: u32, 
-    height: u32, 
+    height: u32,
+    offset: f32,
     imgbuf: &ImageBuffer<Luma<u8>, Vec<u8>>) 
     -> ImageBuffer<Luma<u8>, Vec<u8>> {
     
@@ -245,7 +247,7 @@ fn sdf_image(
     });
 
     let sdf = sdfer::esdt::glyph_to_sdf(&mut bitmap, sdfer::esdt::Params{
-        radius: 32.0,
+        radius: offset,
         cutoff: 0.0,
         ..Default::default()
     }, None).0;
