@@ -8,19 +8,8 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug executable 'image_to_mesh'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=image_to_mesh",
-                    "--package=image_to_mesh"
-                ],
-                "filter": {
-                    "name": "image_to_mesh",
-                    "kind": "bin"
-                }
-            },
             "program": "${workspaceFolder}/target/debug/image_to_mesh",
-            "args": [],
+            "args": ["C:\\tmp\\Textures"],
             "cwd": "${workspaceFolder}",
             "stopOnEntry": false,
             "preLaunchTask": "cargo build",

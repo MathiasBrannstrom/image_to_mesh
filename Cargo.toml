@@ -2,11 +2,21 @@
 name = "image_to_mesh"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Mathias Brännström <mathias.brannstrom@gmail.com>"]
+description = "A library, and an executable, for converting transparent images to 3D meshes."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MathiasBrannstrom/image_to_mesh"
 
 [dependencies]
 obj-exporter = "0.2"
 image = "0.25.5"
 rgeometry = "0.10.0"
 sdfer = "0.2.1"
+
+[lib]
+name = "image_to_mesh"
+path = "src/lib.rs"
+
+[[bin]]
+name = "image_to_mesh"
+path = "src/main.rs"
